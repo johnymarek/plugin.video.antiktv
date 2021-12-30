@@ -41,7 +41,7 @@ def install_antiktv_proxy():
 		pass
 	
 	src_file = os.path.dirname(__file__) + '/antiktv_proxy.sh'
-	os.chown( src_file, 0o755 )
+	os.chmod( src_file, 0o755 )
 	try:
 		os.symlink( src_file, '/etc/init.d/antiktv_proxy.sh' )
 	except:
@@ -349,6 +349,9 @@ class antiktvContentProvider(ContentProvider):
 				f.write( "#DESCRIPTION " + cat + "\n")
 
 				for channel in self.channels[channel_type][cat]:
+					if channel["url"] == None:
+						continue
+					
 					url = self.encode_url( channel["url"] )
 					url = quote_plus( url )
 					
@@ -716,7 +719,9 @@ class antiktvContentProvider(ContentProvider):
 		epg_list = self.maxim.get_actual_epg( epg_list )
 		
 		for channel in channels[ cat ]:
-
+			if channel["url"] == None:
+				continue
+			
 			try:
 				epg = epg_list[ channel["id_content"] ]["epg"][0]
 				
@@ -754,6 +759,9 @@ class antiktvContentProvider(ContentProvider):
 		channels = self.channels[channel_type]
 		for cat in channels:
 			for channel in channels[ cat ]:
+				if channel["url"] == None:
+					continue
+				
 				item = self.video_item( self.encode_url( channel["url"] ) )
 				item["title"] = channel["name"]
 				
