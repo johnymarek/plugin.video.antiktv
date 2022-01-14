@@ -595,7 +595,7 @@ class antiktvContentProvider(ContentProvider):
 		response = "{:02d}:{:02d}".format( d.hour, d.minute )
 		
 		if date2_str != None:
-			d = datetime.strptime( date_str[:19], "%Y-%m-%dT%H:%M:%S")
+			d = datetime.strptime( date2_str[:19], "%Y-%m-%dT%H:%M:%S")
 			response += " - {:02d}:{:02d}".format( d.hour, d.minute )
 			
 		return response
