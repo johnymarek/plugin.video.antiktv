@@ -33,9 +33,9 @@ proxy_url = "http://127.0.0.1:18080"
 
 def install_antiktv_proxy():
 	try:
-		response = requests.get( proxy_url + '/info' )
+		response = requests.get( proxy_url + '/info', timeout=2 )
 		
-		if response.text == "antiktv_proxy":
+		if response.text.startswith("antiktv_proxy"):
 			return True
 	except:
 		pass
@@ -54,13 +54,17 @@ def install_antiktv_proxy():
 	except:
 		pass
 
-	try:
-		response = requests.get( proxy_url + '/info' )
+	for i in range(5):
+		try:
+			response = requests.get( proxy_url + '/info', timeout=1 )
+		except:
+			response = None
+			time.sleep(1)
+			pass
 		
-		if response.text == "antiktv_proxy":
+		if response != None and response.text.startswith("antiktv_proxy"):
 			return True
-	except:
-		pass
+			
 	
 	return False
 
@@ -74,7 +78,7 @@ def build_service_ref( service, player_id ):
 def service_ref_get( lamedb, channel_name, player_id ):
 
 	skylink_freq = [ 11739, 11778, 11856, 11876, 11934, 11954, 11973, 12012, 12032, 12070, 12090, 12110, 12129, 12168, 12344, 12363 ]
-	antik_freq = [ 11055, 11094, 11231, 11283, 11324, 11366, 11471, 11554, 11595, 11637, 12605 ]
+	antik_freq = [ 11055, 11094, 11231, 11283, 11324, 11471, 11554, 11595, 11637, 12605 ]
 	
 	def cmp_freq( f, f_list ):
 		f = int(f/1000)
@@ -167,7 +171,7 @@ class antiktvContentProvider(ContentProvider):
 			device_id = __addon__.getSetting( 'device_id' )
 			
 			if len( self.username ) == 0 or len( self.password ) == 0:
-				client.showInfo("Nie su zadané prihlasovacie údaje!")
+				client.showInfo("Nie su zadané prihlasovacie údaje!\nTeraz sa vrátite do zoznamu pluginov. V ňom nechajte vybraný plugin Antik TV, stlačte tlačidlo MENU a vyberte NASTAVENIA. V nich budete mať možnosť zadať potrebné prihlasovacie údaje.")
 				return False
 			
 			if len( self.device_id ) == 0:
@@ -188,7 +192,6 @@ class antiktvContentProvider(ContentProvider):
 				client.add_operation('SHOW_MSG', { 'msg': "Zariadenie zaregistrované:\n" + msg, 'msgType': 'info', 'msgTimeout': 0, 'canClose': True, })
 		else:
 			if data2["is_anonymous"] == True:
-				# only login part of registration is needed
 				ret, msg = self.maxim.register_device_id(True)
 
 				if ret == False:
@@ -201,11 +204,11 @@ class antiktvContentProvider(ContentProvider):
 		ret, data1 = self.maxim.check_login()
 		
 		if ret == False:
-			client.showInfo("Nesprávne prihlasovacie meno alebo heslo")
+			client.showInfo("Nesprávne prihlasovacie meno alebo heslo!\nTeraz sa vrátite do zoznamu pluginov. V ňom nechajte vybraný plugin Antik TV, stlačte tlačidlo MENU a vyberte NASTAVENIA. V nich budete mať možnosť opraviť prihlasovacie údaje.")
 			return False
 
 		if install_antiktv_proxy() == False:
-			client.showInfo("Nepodarilo sa spustiť AntikTV HTTP proxy!")
+			client.showInfo("Nepodarilo sa spustiť AntikTV HTTP proxy!\nBez spustenia tejto služby nefunguje prehrávanie programov. Reštartujte prijímač a skúste znovu spustiť plugin.")
 			return False
 		
 		return True
