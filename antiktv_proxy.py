@@ -224,7 +224,7 @@ def create_xmlepg( data_file, channels_file, days ):
 				for cat in channels:
 					for channel in channels[cat]:
 						id_content = 'AntikTV_' + channel["id_content"]
-						fc.write( ' <channel id="%s">1:0:1:%x:%x:0:E010000:0:0:0:http%%3a//</channel>\n' % (id_content, channel["id"], channel_type_id))
+						fc.write( ' <channel id="%s">1:0:1:%X:%X:0:E010000:0:0:0:http%%3a//</channel>\n' % (id_content, channel["id"], channel_type_id))
 		
 				for cat in channels:
 					for channel in channels[cat]:

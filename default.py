@@ -32,6 +32,7 @@ from datetime import datetime
 from datetime import timedelta
 import time
 import json
+import threading
 from lameDB import lameDB
 
 ######### contentprovider ##########
@@ -138,11 +139,30 @@ def service_ref_get( lamedb, channel_name, player_id, channel_id, channel_type )
 		except:
 			pass
 	
-	return player_id + ":0:1:%x:%x:0:E010000:0:0:0:" % (channel_id, channel_type)
+	return player_id + ":0:1:%X:%X:0:E010000:0:0:0:" % (channel_id, channel_type)
 
 
 # #################################################################################################
+
+def download_picons( picons ):
+	if not os.path.exists( '/usr/share/enigma2/picon' ):
+		os.mkdir('/usr/share/enigma2/picon')
 		
+	for ref in picons:
+		fileout = '/usr/share/enigma2/picon/' + ref + '.png'
+		
+		for url in (picons[ref].replace('.png', '_100x100.png'), picons[ref]):
+			if not os.path.exists(fileout):
+				try:
+					r = requests.get( url, timeout=3 )
+					if r.status_code == 200:
+						with open(fileout, 'wb') as f:
+							f.write( r.content )
+				except:
+					pass
+	
+# #################################################################################################
+	
 class antiktvContentProvider(ContentProvider):
 	maxim = None
 	
@@ -365,6 +385,9 @@ class antiktvContentProvider(ContentProvider):
 		channel_type_num = 0 if channel_type == "tv" else 1
 		file_name = "userbouquet.antiktv_" + channel_type + ".tv"
 		
+		picons = {}
+		picons_enabled = __addon__.getSetting('enable_picons').lower() == 'true'
+		
 		with open( "/etc/enigma2/" + file_name, "w" ) as f:
 			f.write( "#NAME Antik " + channel_type + "\n")
 			for cat in self.channels[channel_type]:
@@ -386,6 +409,12 @@ class antiktvContentProvider(ContentProvider):
 						
 					f.write( "#SERVICE " + service_ref + url + ":" + channel["name"] + "\n")
 					f.write( "#DESCRIPTION " + channel["name"] + "\n")
+					
+					try:
+						if picons_enabled and service_ref.endswith(':E010000:0:0:0:'):
+							picons[ service_ref[:-1].replace(':', '_') ] = channel['logo']
+					except:
+						pass
 		
 		first_export = True
 		with open( "/etc/enigma2/bouquets.tv", "r" ) as f:
@@ -402,6 +431,9 @@ class antiktvContentProvider(ContentProvider):
 			requests.get("http://127.0.0.1/web/servicelistreload?mode=2")
 		except:
 			pass
+		
+		if picons_enabled:
+			threading.Thread(target=download_picons,args=(picons,)).start()
 		
 		return "userbouquet pre typ " + channel_type + " vygenerovaný"
 			
